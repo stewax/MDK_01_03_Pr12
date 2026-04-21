@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Pr12"
 include(":app")
- 
+include(":network")
