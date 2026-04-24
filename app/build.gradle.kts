@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.utils.immutableListBuilder
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -32,7 +34,7 @@ android {
 }
 
 dependencies {
-
+    implementation(project(":network"))
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
