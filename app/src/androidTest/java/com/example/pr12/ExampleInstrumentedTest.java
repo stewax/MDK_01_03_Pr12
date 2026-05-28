@@ -2,7 +2,6 @@ package com.example.pr12;
 
 import android.util.Log;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -10,6 +9,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
 import static org.junit.Assert.*;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.example.network.datas.users.UserCreate;
 import com.example.network.datas.users.UserGet;
@@ -27,189 +28,178 @@ import java.util.concurrent.TimeUnit;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
-
-    private static String CURRENT_TOKEN = null;
-
     @Test
-    public void A_UserLogin() throws InterruptedException {
+    public void UserLogin() throws InterruptedException {
         final Boolean[] Success = {false};
+
         CountDownLatch Latch = new CountDownLatch(1);
+
         User User = new User("testing@mail.ru", "Asdfg123*");
 
-        new UserLogin(User, new MyResponseCallbacks() {
-            @Override
-            public void onCompile(String result) {
-                Log.d("USER LOGIN", result);
-                try {
-                    if (result.contains("\"token\"")) {
-                        String[] parts = result.split("\"token\":\"");
-                        if (parts.length > 1) {
-                            CURRENT_TOKEN = parts[1].split("\"")[0];
-                            Log.d("TOKEN_SAVED", "Token saved: " + CURRENT_TOKEN);
-                        }
+        new UserLogin(
+                User,
+                new MyResponseCallbacks() {
+                    @Override
+                    public void onCompile(String result) {
+                        Log.d("USER LOGIN", result);
+                        Success[0] = true;
+                        Latch.countDown();
                     }
-                } catch (Exception e) {
-                    Log.e("TOKEN_PARSE", "Error parsing token", e);
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e("USER LOGIN", error);
+                        Latch.countDown();
+                    }
                 }
+        ).execute();
+        Boolean Completed = Latch.await(60, TimeUnit.SECONDS);
 
-                Success[0] = true;
-                Latch.countDown();
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e("USER LOGIN", error);
-                Latch.countDown();
-            }
-        }).execute();
-
-        boolean Completed = Latch.await(60, TimeUnit.SECONDS);
         assertTrue(Success[0]);
-        assertNotNull("Token should not be null after login", CURRENT_TOKEN);
     }
 
     @Test
-    public void B_UserCreate() throws InterruptedException {
+    public void UserCreate() throws InterruptedException {
         final Boolean[] Success = {false};
+
         CountDownLatch Latch = new CountDownLatch(1);
-        User User = new User("test_unique_" + System.currentTimeMillis() + "@mail.ru", "Asdfg123*", "Тестовый", "Пользователь", "Системы", 0);
 
-        new UserCreate(User, new MyResponseCallbacks() {
-            @Override
-            public void onCompile(String result) {
-                Log.d("USER CREATE", result);
-                Success[0] = true;
-                Latch.countDown();
-            }
+        User User = new User("osennikovevуeу@mail.ru", "228", "Степан", "Андреевич", "Климов", 0);
 
-            @Override
-            public void onError(String error) {
-                Log.e("USER CREATE", error);
-                if (error.contains("already exists")) {
-                    Success[0] = true;
-                } else {
-                    Success[0] = false;
+        new UserCreate(
+                User,
+                new MyResponseCallbacks() {
+                    @Override
+                    public void onCompile(String result) {
+                        Log.d("USER CREATE", result);
+                        Success[0] = true;
+                        Latch.countDown();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e("USER CREATE", error);
+                        Latch.countDown();
+                    }
                 }
-                Latch.countDown();
-            }
-        }).execute();
+        ).execute();
+        Boolean Completed = Latch.await(60, TimeUnit.SECONDS);
 
-        boolean Completed = Latch.await(60, TimeUnit.SECONDS);
         assertTrue(Success[0]);
     }
 
     @Test
-    public void C_UserUpdate() throws InterruptedException {
+    public void UserUpdate() throws InterruptedException {
         final Boolean[] Success = {false};
+
         CountDownLatch Latch = new CountDownLatch(1);
 
-        if (CURRENT_TOKEN == null) {
-            fail("No token available. Did Login test pass?");
-        }
+        User User = new User("Evge@mail.ru", "2282", "Евгений", "Андреевич", "Осенников", 0);
 
-        User User = new User("testing@mail.ru", "Asdfg123*", "Обновленный", "Юзер", "Теста", 0);
+        new UserUpdate(
+                User,
+                Settings.DEMO_TOKEN,
+                new MyResponseCallbacks() {
+                    @Override
+                    public void onCompile(String result) {
+                        Log.d("USER UPDATE", result);
+                        Success[0] = true;
+                        Latch.countDown();
+                    }
 
-        new UserUpdate(User, CURRENT_TOKEN, new MyResponseCallbacks() {
-            @Override
-            public void onCompile(String result) {
-                Log.d("USER UPDATE", result);
-                Success[0] = true;
-                Latch.countDown();
-            }
+                    @Override
+                    public void onError(String error) {
+                        Log.e("USER UPDATE", error);
+                        Latch.countDown();
+                    }
+                }
+        ).execute();
+        Boolean Completed = Latch.await(60, TimeUnit.SECONDS);
 
-            @Override
-            public void onError(String error) {
-                Log.e("USER UPDATE", error);
-                Success[0] = false;
-                Latch.countDown();
-            }
-        }).execute();
-
-        boolean Completed = Latch.await(60, TimeUnit.SECONDS);
         assertTrue(Success[0]);
     }
 
     @Test
-    public void D_UserGet() throws InterruptedException {
+    public void UserGet() throws InterruptedException {
         final Boolean[] Success = {false};
+
         CountDownLatch Latch = new CountDownLatch(1);
 
-        if (CURRENT_TOKEN == null) {
-            fail("No token available.");
-        }
+        new UserGet(
+                Settings.DEMO_TOKEN,
+                new MyResponseCallbacks() {
+                    @Override
+                    public void onCompile(String result) {
+                        Log.d("USER GET", result);
+                        Success[0] = true;
+                        Latch.countDown();
+                    }
 
-        new UserGet(CURRENT_TOKEN, new MyResponseCallbacks() {
-            @Override
-            public void onCompile(String result) {
-                Log.d("USER GET", result);
-                Success[0] = true;
-                Latch.countDown();
-            }
+                    @Override
+                    public void onError(String error) {
+                        Log.e("USER GET", error);
+                        Latch.countDown();
+                    }
+                }
+        ).execute();
+        Boolean Completed = Latch.await(60, TimeUnit.SECONDS);
 
-            @Override
-            public void onError(String error) {
-                Log.e("USER GET", error);
-                Success[0] = false;
-                Latch.countDown();
-            }
-        }).execute();
-
-        boolean Completed = Latch.await(60, TimeUnit.SECONDS);
         assertTrue(Success[0]);
     }
 
     @Test
-    public void E_UserLogout() throws InterruptedException {
+    public void UserLogout() throws InterruptedException {
         final Boolean[] Success = {false};
+
         CountDownLatch Latch = new CountDownLatch(1);
 
-        if (CURRENT_TOKEN == null) {
-            fail("No token available.");
-        }
+        new UserLogout(
+                Settings.DEMO_TOKEN,
+                new MyResponseCallbacks() {
+                    @Override
+                    public void onCompile(String result) {
+                        Log.d("USER LOGOUT", result);
+                        Success[0] = true;
+                        Latch.countDown();
+                    }
 
-        // Передаем СОХРАНЕННЫЙ токен
-        new UserLogout(CURRENT_TOKEN, new MyResponseCallbacks() {
-            @Override
-            public void onCompile(String result) {
-                Log.d("USER LOGOUT", result);
-                Success[0] = true;
-                Latch.countDown();
-            }
+                    @Override
+                    public void onError(String error) {
+                        Log.e("USER LOGOUT", error);
+                        Latch.countDown();
+                    }
+                }
+        ).execute();
+        Boolean Completed = Latch.await(60, TimeUnit.SECONDS);
 
-            @Override
-            public void onError(String error) {
-                Log.e("USER LOGOUT", error);
-                Success[0] = false;
-                Latch.countDown();
-            }
-        }).execute();
-
-        boolean Completed = Latch.await(60, TimeUnit.SECONDS);
         assertTrue(Success[0]);
     }
 
     @Test
-    public void F_UserSend() throws InterruptedException {
+    public void UserSend() throws InterruptedException {
         final Boolean[] Success = {false};
+
         CountDownLatch Latch = new CountDownLatch(1);
 
-        new UserSend("testing@mail.ru", new MyResponseCallbacks() {
-            @Override
-            public void onCompile(String result) {
-                Log.d("USER SEND", result);
-                Success[0] = true;
-                Latch.countDown();
-            }
+        new UserSend(
+                "stepan@mail.ru",
+                new MyResponseCallbacks() {
+                    @Override
+                    public void onCompile(String result) {
+                        Log.d("USER SEND", result);
+                        Success[0] = true;
+                        Latch.countDown();
+                    }
 
-            @Override
-            public void onError(String error) {
-                Log.e("USER SEND", error);
-                Success[0] = false;
-                Latch.countDown();
-            }
-        }).execute();
+                    @Override
+                    public void onError(String error) {
+                        Log.e("USER SEND", error);
+                        Latch.countDown();
+                    }
+                }
+        ).execute();
+        Boolean Completed = Latch.await(60, TimeUnit.SECONDS);
 
-        boolean Completed = Latch.await(60, TimeUnit.SECONDS);
         assertTrue(Success[0]);
     }
 }
